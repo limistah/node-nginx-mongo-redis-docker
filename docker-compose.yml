@@ -1,0 +1,55 @@
+version: "2"
+services:
+  node:
+    build:
+      context: .
+      dockerfile: node.Dockerfile
+    volumes:
+      - ./:/home/node/app
+    command: "npm start"
+    ports:
+      - 5000:5000
+    depends_on:
+      - redis-server
+      - mongodb-server
+    networks:
+      - nginx-proxy
+      - default
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    volumes:
+      - ./:/home/node/app
+    # command: "npm start"
+    restart: always
+    ports:
+      - 80:80
+    depends_on:
+      - node
+    # network_mode: bridge
+    networks:
+      - nginx-proxy
+      - default
+  redis-server:
+    image: "redis:5.0.8-alpine"
+    volumes:
+      - ./redis-data:/data
+    ports:
+      - "6379:6379"
+
+  mongodb-server:
+    image: "mongo:4.2.3-bionic"
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/data
+    # environment:
+    #   - MONGO_INITDB_ROOT_USERNAME: "root"
+    #   - MONGO_INITDB_ROOT_PASSWORD: "example"
+  # networks:
+  #   - server:
+
+networks:
+  nginx-proxy:
+    # external: true
